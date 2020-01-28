@@ -1,0 +1,23 @@
+{
+  "name": "tinymce-language-selector",
+  "version": "1.0.2",
+  "description": "A plugin for TinyMCE 5 that allows the user to specify if text is written in a foreign language and in which language.",
+  "main": "tinymce-language-selector/plugin.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edx/tinymce-language-selector.git"
+  },
+  "keywords": [
+    "tinymce",
+    "accessibility"
+  ],
+  "author": "Karen Gu",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/edx/tinymce-language-selector/issues"
+  },
+  "homepage": "https://github.com/edx/tinymce-language-selector#readme"
+}
