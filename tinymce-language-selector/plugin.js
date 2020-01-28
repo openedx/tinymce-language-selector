@@ -1,25 +1,45 @@
-import { BROWSER_DEFAULT, languages } from "./constants";
+import { BROWSER_DEFAULT, languages } from './constants';
 
 // Depending on the current location of the cursor, replace the current node with the HTML in `lang`
 // This cannot be an arrow function because tinyMCE accesses it via a new keyword.
 tinymce.PluginManager.add('language', function(editor) {
   const replaceText = (lang) => {
     const selectedNode = editor.selection.getNode();
-    const newText = editor.selection.getContent({ format: 'text' });
+    const newText = editor.selection.getContent({ format: 'html' });
     const contents = newText || '&#65279'; // use zero-width character as placeholder if no existing text
     const newSpanText = lang === BROWSER_DEFAULT ? `<span id="new_span">${contents}</span>` : `<span lang="${lang}" id="new_span">${contents}</span>`;
+    editor.selection.setContent(''); // delete any existing text
     // may be in the middle of the span, so split it into two
     if (selectedNode.nodeName === 'SPAN') {
       if (selectedNode.lang) {
-        editor.selection.setContent(''); // delete any existing text
         editor.execCommand('mceInsertRawHTML', false, `</span>${newSpanText}<span lang="${selectedNode.lang}">`);
       } else {
-        editor.selection.setContent(''); // delete any existing text
         editor.execCommand('mceInsertRawHTML', false, `</span>${newSpanText}<span>`);
       }
-    } else { // conservatively insert HTML
-      editor.selection.setContent(''); // delete any existing text
-      editor.execCommand('mceInsertRawHTML', false, newSpanText);
+    } else { // could be inside another tag like <a> or <b> that is a descendant of a span
+      const parentSpan = tinymce.DOM.getParent(selectedNode, n => n.nodeName === 'SPAN' && !n.dataset.mceBogus);
+      if (parentSpan) {
+        let currentNode = selectedNode;
+        let insertedText = newSpanText;
+        while (currentNode !== parentSpan) { // wrap new span with same tags
+          insertedText = `<${currentNode.nodeName.toLowerCase()}>${insertedText}</${currentNode.nodeName.toLowerCase()}>`;
+          currentNode = currentNode.parentNode;
+        }
+        // create new span with or without lang attribute, depending on parent span
+        if (parentSpan.lang) {
+          insertedText = `</span>${insertedText}<span lang="${parentSpan.lang}">`;
+        } else {
+          insertedText = `</span>${insertedText}<span>`
+        }
+        currentNode = selectedNode
+        while (currentNode !== parentSpan) { // close out old tags and create new ones at the end of inserted content
+          insertedText = `</${currentNode.nodeName.toLowerCase()}>${insertedText}<${currentNode.nodeName.toLowerCase()}>`;
+          currentNode = currentNode.parentNode;
+        }
+        editor.execCommand('mceInsertRawHTML', false, insertedText);
+      } else { // conservatively insert HTML
+        editor.execCommand('mceInsertRawHTML', false, newSpanText);
+      }
     }
     const newSpan = editor.dom.get('new_span');
     editor.selection.select(newSpan);
@@ -36,9 +56,37 @@ tinymce.PluginManager.add('language', function(editor) {
     }
   };
 
+  // Get the language of the current cursor position
+  const getSelectedLanguage = (editor) => {
+    const selectedNode = editor.selection.getNode();
+    let selectedLang;
+    // TinyMCE inserts bogus span that have no meaning for language
+    if (selectedNode.nodeName === 'SPAN' && !selectedNode.dataset.mceBogus) {
+      selectedLang = selectedNode.lang;
+    } else if (selectedNode.nodeName === 'P') { // we never add a lang attribute to a p tag
+      selectedLang = null;
+    } else { // might be inside another tag such as <b> or <a>
+      const parentSpan = tinymce.DOM.getParent(selectedNode, n => n.nodeName === 'SPAN' && !n.dataset.mceBogus);
+      if (parentSpan) {
+        selectedLang = parentSpan.lang;
+      } else {
+        selectedLang = null;
+      }
+    }
+    return selectedLang;
+  }
+
   const openDialog = (buttonApi) => {
     const selectedNode = editor.selection.getNode();
-    const currentLang = selectedNode.lang ? selectedNode.lang : BROWSER_DEFAULT;
+    if (['OL', 'UL'].includes(selectedNode.nodeName)) {
+      editor.notificationManager.open({
+        text: 'You cannot change the language of a list. Set the language first and then create the list.',
+        type: 'error',
+      });
+      return;
+    }
+    const selectedLang = getSelectedLanguage(editor);
+    const currentLang = selectedLang ? selectedLang : BROWSER_DEFAULT;
     editor.windowManager.open({
       title: 'Language plugin',
       body: {
@@ -93,6 +141,16 @@ tinymce.PluginManager.add('language', function(editor) {
       // might be able to improve if https://github.com/tinymce/tinymce/issues/5040 gets resolved
       editor.dom.select('button', editor.targetElm.nextElementSibling).filter(b => b.innerText === 'Browser' +
           ' default language')[0].setAttribute('id', `lang-button-${editor.id}`);
+      // Update button state (disabled: default, enabled: other) and button text
+      const updateCurrentLanguage = () => {
+        const selectedLang = getSelectedLanguage(editor);
+        if (selectedLang) {
+          buttonApi.setActive(true);
+        } else {
+          buttonApi.setActive(false);
+        }
+        updateButtonText(selectedLang);
+      };
       editor.addShortcut('Meta+L', 'Switch to default language', () => {
         const selectedNode = editor.selection.getNode();
         const currentLang = selectedNode.lang ? selectedNode.lang : BROWSER_DEFAULT;
@@ -100,40 +158,10 @@ tinymce.PluginManager.add('language', function(editor) {
           editor.undoManager.transact(() => {
             replaceText(BROWSER_DEFAULT);
             buttonApi.setActive(false);
+            updateCurrentLanguage();
           });
         }
       });
-      // Update button state (disabled: default, enabled: other) and button text
-      const updateCurrentLanguage = () => {
-        const selectedNode = editor.selection.getNode();
-        let selectedLang;
-        // TinyMCE inserts bogus span that have no meaning for language
-        if (selectedNode.nodeName === 'SPAN' && !selectedNode.dataset.mceBogus) {
-          if (selectedNode.lang) {
-            buttonApi.setActive(true);
-          } else {
-            buttonApi.setActive(false);
-          }
-          selectedLang = selectedNode.lang;
-        } else if (selectedNode.nodeName === 'P') { // we never add a lang attribute to a p tag
-          buttonApi.setActive(false);
-          selectedLang = null;
-        } else { // might be inside another tag such as <b> or <a>
-          const parentSpan = tinymce.DOM.getParent(selectedNode, n => n.nodeName === 'SPAN' && !n.dataset.mceBogus);
-          if (parentSpan) {
-            if (parentSpan.lang) {
-              buttonApi.setActive(true);
-            } else {
-              buttonApi.setActive(false);
-            }
-            selectedLang = parentSpan.lang;
-          } else {
-            buttonApi.setActive(false);
-            selectedLang = null;
-          }
-        }
-        updateButtonText(selectedLang);
-      };
       editor.on('keyup', updateCurrentLanguage);
       editor.on('click', updateCurrentLanguage);
       return () => { // remove event listeners on teardown
