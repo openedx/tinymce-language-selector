@@ -6,17 +6,20 @@ tinymce.PluginManager.add('language', function(editor) {
   const replaceText = (lang) => {
     const selectedNode = editor.selection.getNode();
     const newText = editor.selection.getContent({ format: 'text' });
-    const contents = newText || '&#65279';
+    const contents = newText || '&#65279'; // use zero-width character as placeholder if no existing text
     const newSpanText = lang === BROWSER_DEFAULT ? `<span id="new_span">${contents}</span>` : `<span lang="${lang}" id="new_span">${contents}</span>`;
     // may be in the middle of the span, so split it into two
     if (selectedNode.nodeName === 'SPAN') {
       if (selectedNode.lang) {
-        editor.execCommand('mceReplaceContent', false, `</span>${newSpanText}<span lang="${selectedNode.lang}">`);
+        editor.selection.setContent(''); // delete any existing text
+        editor.execCommand('mceInsertRawHTML', false, `</span>${newSpanText}<span lang="${selectedNode.lang}">`);
       } else {
-        editor.execCommand('mceReplaceContent', false, `</span>${newSpanText}<span>`);
+        editor.selection.setContent(''); // delete any existing text
+        editor.execCommand('mceInsertRawHTML', false, `</span>${newSpanText}<span>`);
       }
     } else { // conservatively insert HTML
-      editor.execCommand('mceReplaceContent', false, newSpanText);
+      editor.selection.setContent(''); // delete any existing text
+      editor.execCommand('mceInsertRawHTML', false, newSpanText);
     }
     const newSpan = editor.dom.get('new_span');
     editor.selection.select(newSpan);
