@@ -84,11 +84,11 @@ tinymce.PluginManager.add('language', function(editor) {
     const formatTags = ['B', 'U', 'I', 'STRONG', 'EM'];
     // Inserting a span across multiple tags (excluding formatting) doesn't work.
     if ((selectionStartNode !== selectionEndNode &&
-        !formatTags.includes(selectionEndNode.nodeName) &&
-        !formatTags.includes(selectionStartNode.nodeName)) ||
+        !formatTags.includes(selectionStartNode.nodeName) &&
+        !formatTags.includes(selectionEndNode.nodeName)) ||
         listTags.includes(selectedNode.nodeName)) {
       editor.notificationManager.open({
-        text: 'The region that you have selected is too complex. Try selecting smaller regions, or trying changing' +
+        text: 'The region that you have selected is too complex. Try selecting smaller regions, or try changing' +
             ' the language first and then typing your text as desired.',
         type: 'error',
       });
