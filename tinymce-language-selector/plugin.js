@@ -29,9 +29,9 @@ tinymce.PluginManager.add('language', function(editor) {
         if (parentSpan.lang) {
           insertedText = `</span>${insertedText}<span lang="${parentSpan.lang}">`;
         } else {
-          insertedText = `</span>${insertedText}<span>`
+          insertedText = `</span>${insertedText}<span>`;
         }
-        currentNode = selectedNode
+        currentNode = selectedNode;
         while (currentNode !== parentSpan) { // close out old tags and create new ones at the end of inserted content
           insertedText = `</${currentNode.nodeName.toLowerCase()}>${insertedText}<${currentNode.nodeName.toLowerCase()}>`;
           currentNode = currentNode.parentNode;
@@ -74,19 +74,28 @@ tinymce.PluginManager.add('language', function(editor) {
       }
     }
     return selectedLang;
-  }
+  };
 
   const openDialog = (buttonApi) => {
     const selectedNode = editor.selection.getNode();
-    if (['OL', 'UL'].includes(selectedNode.nodeName)) {
+    const selectionStartNode = editor.selection.getStart();
+    const selectionEndNode = editor.selection.getEnd();
+    const listTags = ['OL', 'UL'];
+    const formatTags = ['B', 'U', 'I', 'STRONG', 'EM'];
+    // Inserting a span across multiple tags (excluding formatting) doesn't work.
+    if ((selectionStartNode !== selectionEndNode &&
+        !formatTags.includes(selectionStartNode.nodeName) &&
+        !formatTags.includes(selectionEndNode.nodeName)) ||
+        listTags.includes(selectedNode.nodeName)) {
       editor.notificationManager.open({
-        text: 'You cannot change the language of a list. Set the language first and then create the list.',
+        text: 'The region that you have selected is too complex. Try selecting smaller regions, or try changing' +
+            ' the language first and then typing your text as desired.',
         type: 'error',
       });
       return;
     }
     const selectedLang = getSelectedLanguage(editor);
-    const currentLang = selectedLang ? selectedLang : BROWSER_DEFAULT;
+    const currentLang = selectedLang || BROWSER_DEFAULT;
     editor.windowManager.open({
       title: 'Language plugin',
       body: {
