@@ -1,6 +1,6 @@
 {
   "name": "tinymce-language-selector",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A plugin for TinyMCE 5 that allows the user to specify if text is written in a foreign language and in which language.",
   "main": "tinymce-language-selector/plugin.js",
   "scripts": {
