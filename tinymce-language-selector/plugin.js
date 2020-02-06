@@ -148,8 +148,13 @@ tinymce.PluginManager.add('language', function(editor) {
     onSetup(buttonApi) {
       // add an id attribute to the button so its text can be modified later
       // might be able to improve if https://github.com/tinymce/tinymce/issues/5040 gets resolved
-      editor.dom.select('button', editor.targetElm.nextElementSibling).filter(b => b.innerText === 'Browser' +
+      // We use setTimeout here without an explicit delay to avoid a race condition.  The query was running
+      // before the innerText was being set to the button, but now, our setTimeout wrapper
+      // invokes this query once the current execution queue is finished.
+      setTimeout(() => {
+        editor.dom.select('button', editor.targetElm.nextElementSibling).filter(b => b.innerText === 'Browser' +
           ' default language')[0].setAttribute('id', `lang-button-${editor.id}`);
+      });
       // Update button state (disabled: default, enabled: other) and button text
       const updateCurrentLanguage = () => {
         const selectedLang = getSelectedLanguage(editor);
