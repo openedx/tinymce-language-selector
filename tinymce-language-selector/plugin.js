@@ -2,7 +2,7 @@ import { BROWSER_DEFAULT, languages } from './constants';
 
 // Depending on the current location of the cursor, replace the current node with the HTML in `lang`
 // This cannot be an arrow function because tinyMCE accesses it via a new keyword.
-tinymce.PluginManager.add('language', function(editor) {
+tinymce.PluginManager.add('language', function (editor) {
   const replaceText = (lang) => {
     const selectedNode = editor.selection.getNode();
     const newText = editor.selection.getContent({ format: 'html' });
@@ -84,12 +84,12 @@ tinymce.PluginManager.add('language', function(editor) {
     const formatTags = ['B', 'U', 'I', 'STRONG', 'EM'];
     // Inserting a span across multiple tags (excluding formatting) doesn't work.
     if ((selectionStartNode !== selectionEndNode &&
-        !formatTags.includes(selectionStartNode.nodeName) &&
-        !formatTags.includes(selectionEndNode.nodeName)) ||
-        listTags.includes(selectedNode.nodeName)) {
+      !formatTags.includes(selectionStartNode.nodeName) &&
+      !formatTags.includes(selectionEndNode.nodeName)) ||
+      listTags.includes(selectedNode.nodeName)) {
       editor.notificationManager.open({
         text: 'The region that you have selected is too complex. Try selecting smaller regions, or try changing' +
-            ' the language first and then typing your text as desired.',
+          ' the language first and then typing your text as desired.',
         type: 'error',
       });
       return;
@@ -140,21 +140,37 @@ tinymce.PluginManager.add('language', function(editor) {
     });
   };
 
+  const addIdAttribute = (editor, attempts = 0) => {
+    // Only attempt this at most 3 times including the first pass (~2 seconds total)
+    if (attempts < 3) {
+      setTimeout(
+        () => {
+          // add an id attribute to the button so its text can be modified later
+          // might be able to improve if https://github.com/tinymce/tinymce/issues/5040 gets resolved
+          // We use setTimeout here without an explicit delay to avoid a race condition.  The query was running
+          // before the innerText was being set to the button, but now, our setTimeout wrapper
+          // invokes this query once the current execution queue is finished.
+          try {
+            editor.dom.select('button', editor.targetElm.nextElementSibling).filter(b => b.innerText === 'Browser' +
+              ' default language')[0].setAttribute('id', `lang-button-${editor.id}`);
+          } catch (exception) { // Swallow this exception as we'll do our logging once our attempts are complete.
+            addIdAttribute(editor, attempts += 1);
+          }
+        },
+        attempts * 1000
+      )
+    } else {
+      console.error(`Failed to find and set button ID in TinyMceLanguageSelectorPlugin after ${attempts} attempts.`);
+    }
+  }
+
   editor.ui.registry.addToggleButton('language', {
     text: 'Browser default language',
     onAction(buttonApi) {
       openDialog(buttonApi);
     },
     onSetup(buttonApi) {
-      // add an id attribute to the button so its text can be modified later
-      // might be able to improve if https://github.com/tinymce/tinymce/issues/5040 gets resolved
-      // We use setTimeout here without an explicit delay to avoid a race condition.  The query was running
-      // before the innerText was being set to the button, but now, our setTimeout wrapper
-      // invokes this query once the current execution queue is finished.
-      setTimeout(() => {
-        editor.dom.select('button', editor.targetElm.nextElementSibling).filter(b => b.innerText === 'Browser' +
-          ' default language')[0].setAttribute('id', `lang-button-${editor.id}`);
-      });
+      addIdAttribute(editor);
       // Update button state (disabled: default, enabled: other) and button text
       const updateCurrentLanguage = () => {
         const selectedLang = getSelectedLanguage(editor);
