@@ -31,6 +31,11 @@ Then you can use the plugin just like one of TinyMCE's builtin plugins. When con
 
 `extended_valid_elements: 'span[lang|id] -span'`
 
+# Development
+We are leveraging the 
+[semantic release workflow](https://github.com/semantic-release/semantic-release#commit-message-format)
+to create new versions and release packages to npm.
+
 # Caveats
 - The repo currently doesn't contain any unit tests due to how specific TinyMCE's testing framework is to itself. It
  has only been tested manually so far.
