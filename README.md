@@ -15,13 +15,13 @@ The plugin is intended for use as you are creating a new passage. It also works 
 
 This is published as an NPM package.
 
-`npm install tinymce-language-selector`
+`npm install @edx/tinymce-language-selector`
 
 # Usage
 
 Import the plugin to add it to TinyMCE's plugin manager:
 
-`import 'tinymce-language-selector'`
+`import '@edx/tinymce-language-selector'`
 
 Make sure TinyMCE has already been imported since the plugin needs access to the global `tinymce` variable.
 

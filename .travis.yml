@@ -3,6 +3,9 @@ node_js:
 - stable
 - '6'
 - '4'
+branches:
+  only:
+    - master
 install:
 - npm install
 after_success:
