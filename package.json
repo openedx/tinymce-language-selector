@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/edx/tinymce-language-selector.git"
+    "url": "git+https://github.com/openedx/tinymce-language-selector.git"
   },
   "keywords": [
     "tinymce",
@@ -20,7 +20,7 @@
   "author": "edX",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/edx/tinymce-language-selector/issues"
+    "url": "https://github.com/openedx/tinymce-language-selector/issues"
   },
-  "homepage": "https://github.com/edx/tinymce-language-selector#readme"
+  "homepage": "https://github.com/openedx/tinymce-language-selector#readme"
 }
