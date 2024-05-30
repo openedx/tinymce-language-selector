@@ -1,0 +1,21 @@
+# This file records information about this repo. Its use is described in OEP-55:
+# https://open-edx-proposals.readthedocs.io/en/latest/processes/oep-0055-proc-project-maintainers.html
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: 'tinymce-language-selector'
+  description: >
+          This is a plugin for TinyMCE 5 that allows users to specify
+          what language their text is written in.
+  links:
+    - url: "https://github.com/openedx/tinymce-language-selector"
+      title: "openedx/tinymce-language-selector"
+      icon: "GitHub"
+  annotations:
+    openedx.org/arch-interest-groups: ""
+    openedx.org/release: "main"
+spec:
+  owner: group:openedx-unmaintained
+  type: 'library'
+  lifecycle: 'production'
