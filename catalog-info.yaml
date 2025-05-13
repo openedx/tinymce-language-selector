@@ -8,8 +8,14 @@ metadata:
   description: >
           This is a plugin for TinyMCE 5 that allows users to specify
           what language their text is written in.
-  links: []
+  links:
+    - url: "https://github.com/openedx/tinymce-language-selector/blob/master/README.md"
+      title: "Documentation"
+      icon: "Article"
+  annotations:
+    openedx.org/arch-interest-groups: "angonz"
+    openedx.org/release: "master"
 spec:
-  owner: group:openedx-unmaintained
+  owner: user:angonz
   type: 'library'
   lifecycle: 'production'
